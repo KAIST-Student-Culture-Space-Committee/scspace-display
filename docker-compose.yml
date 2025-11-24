@@ -5,7 +5,7 @@ services:
     build: .
     environment:
       NODE_ENV: production
-      PORT: 3300
+      PORT: 3100
     ports:
-      - '3300:3300'
+      - '3100:3100'
     restart: unless-stopped
