@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM node:20-alpine AS deps
+FROM node:latest AS deps
 WORKDIR /app
 ENV NODE_ENV=development
 RUN apk add --no-cache libc6-compat
@@ -10,7 +10,7 @@ FROM deps AS build
 COPY . .
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM node:latest AS runner
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 ENV NODE_ENV=production
