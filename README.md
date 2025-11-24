@@ -36,3 +36,22 @@ npm run build
 You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+
+## Docker
+
+Build and run the production bundle inside a container:
+
+```sh
+docker build -t scspace-display .
+docker run -p 3000:3000 scspace-display
+```
+
+## Docker Compose
+
+Use Docker Compose to streamline the workflow (builds automatically on first run):
+
+```sh
+docker compose up --build
+```
+
+Visit `http://localhost:3000` to verify the app and SSE endpoint.

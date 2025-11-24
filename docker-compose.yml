@@ -1,0 +1,11 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    environment:
+      NODE_ENV: production
+      PORT: 3300
+    ports:
+      - '3300:3300'
+    restart: unless-stopped
