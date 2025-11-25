@@ -5,7 +5,8 @@ const encoder = new TextEncoder();
 const sseHeaders = {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache, no-transform',
-    Connection: 'keep-alive'
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no'
 };
 
 const formatMessage = (payload: string) => encoder.encode(`data: ${payload}\n\n`);
