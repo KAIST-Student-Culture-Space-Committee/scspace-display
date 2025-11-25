@@ -8,7 +8,7 @@
 	let errorMessage = '';
 
 	onMount(() => {
-		const eventSource = new EventSource('/api/text');
+		const eventSource = new EventSource('/api');
 
 		eventSource.onopen = () => {
 			connectionStatus = 'open';
@@ -37,7 +37,7 @@
 
 		try {
 			const query = new URLSearchParams({ text: draftText });
-			const response = await fetch(`/api/text?${query.toString()}`);
+			const response = await fetch(`/api?${query.toString()}`);
 
 			if (!response.ok) {
 				throw new Error('텍스트 전송에 실패했습니다.');
@@ -71,7 +71,7 @@
 	</section>
 
 	<section class="panel">
-		<h2>새 텍스트 전송 (GET: api/text?text=...)</h2>
+		<h2>새 텍스트 전송 (GET: /api?text=...)</h2>
 		<form class="form" on:submit|preventDefault={updateText}>
 			<input type="text" placeholder="전송할 텍스트를 입력하세요" bind:value={draftText} />
 			<button type="submit" disabled={isSubmitting}>
