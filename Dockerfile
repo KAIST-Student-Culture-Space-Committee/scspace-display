@@ -17,6 +17,6 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/build ./build
-EXPOSE 3000
-ENV PORT=3000
+EXPOSE 3100
+ENV PORT=3100
 CMD ["node", "build"]
