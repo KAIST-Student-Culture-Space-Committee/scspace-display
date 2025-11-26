@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { HISTORY_LIMIT } from '../static/const';
 
 	let currentText = '';
+	let messages: string[] = [];
 	let draftText = '';
 	let connectionStatus: 'connecting' | 'open' | 'error' = 'connecting';
 	let isSubmitting = false;
@@ -16,7 +18,9 @@
 		};
 
 		eventSource.onmessage = (event) => {
-			currentText = event.data;
+			const next = event.data;
+			messages = [...messages.slice(-(HISTORY_LIMIT - 1)), next];
+			currentText = next;
 		};
 
 		eventSource.onerror = () => {
@@ -79,6 +83,22 @@
 			</button>
 		</form>
 	</section>
+
+	<section class="panel history">
+		<h2>히스토리</h2>
+		{#if messages.length === 0}
+			<p class="history-empty">아직 기록이 없습니다.</p>
+		{:else}
+			<ol class="history-list">
+				{#each [...messages].reverse() as message, index}
+					<li class="history-item">
+						<span class="badge">{messages.length - index}</span>
+						<span>{message}</span>
+					</li>
+				{/each}
+			</ol>
+		{/if}
+	</section>
 </main>
 
 <style>
@@ -107,6 +127,40 @@
 
 	.panel {
 		background: rgba(255, 255, 255, 0.04);
+		.history-list {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+
+		.history-item {
+			display: flex;
+			gap: 0.75rem;
+			align-items: flex-start;
+			padding: 0.5rem 0.75rem;
+			border-radius: 0.75rem;
+			background: rgba(255, 255, 255, 0.02);
+		}
+
+		.badge {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 1.5rem;
+			height: 1.5rem;
+			border-radius: 999px;
+			font-size: 0.8rem;
+			background: rgba(75, 139, 255, 0.2);
+			color: #9dbdff;
+		}
+
+		.history-empty {
+			margin: 0;
+			color: #8f9ba8;
+		}
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		border-radius: 1rem;
 		padding: 1.5rem;

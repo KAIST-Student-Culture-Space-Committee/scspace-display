@@ -1,5 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { getLatestText, setLatestText, subscribe } from '$lib/server/textBus';
+import { getHistory, getLatestText, setLatestText, subscribe } from '$lib/server/textBus';
 
 const encoder = new TextEncoder();
 const sseHeaders = {
@@ -24,8 +24,12 @@ export const GET: RequestHandler = ({ url }) => {
     const stream = new ReadableStream<Uint8Array>({
         start(controller) {
             const send = (value: string) => controller.enqueue(formatMessage(value));
-
-            send(getLatestText());
+            const history = getHistory();
+            if (history.length === 0) {
+                send(getLatestText());
+            } else {
+                history.forEach((value) => send(value));
+            }
 
             const unsubscribe = subscribe((value) => send(value));
             const heartbeat = setInterval(() => controller.enqueue(heartbeatChunk), 15000);

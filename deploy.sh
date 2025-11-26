@@ -4,5 +4,5 @@ pnpm self-update
 pnpm i
 pnpm build
 
-docker-compose up --build
+docker-compose up -d --build
 
