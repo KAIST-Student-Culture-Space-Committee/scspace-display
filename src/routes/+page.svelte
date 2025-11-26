@@ -86,6 +86,10 @@
 			</div>
 		</div>
 	</section>
+
+	<div class="updated-timestamp">
+		Last Updated: {new Date().toLocaleString()}
+	</div>
 </main>
 
 <style>
@@ -196,5 +200,13 @@
 	.history-card p {
 		margin: 0;
 		font-size: 0.95rem;
+	}
+
+	.updated-timestamp {
+		position: absolute;
+		top: 1rem;
+		right: 1rem;
+		font-size: 0.875rem;
+		color: #666666;
 	}
 </style>
