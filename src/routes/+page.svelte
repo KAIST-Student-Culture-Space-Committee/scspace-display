@@ -82,7 +82,7 @@
 					<p style="margin: 0">학생문화공간위원회</p>
 					<p style="margin: 0">Student Culture & Space Committee</p>
 				</div>
-				<img src="src/static/logo.svg" alt="메인 포스터" height="60" />
+				<img src="/logo.svg" alt="Logo" height="60" />
 			</div>
 		</div>
 	</section>
