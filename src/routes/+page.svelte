@@ -4,9 +4,8 @@
 
 	let currentText = '';
 	let messages: string[] = [];
-	let draftText = '';
+	let recentMessages: string[] = [];
 	let connectionStatus: 'connecting' | 'open' | 'error' = 'connecting';
-	let isSubmitting = false;
 	let errorMessage = '';
 
 	onMount(() => {
@@ -31,36 +30,13 @@
 		return () => eventSource.close();
 	});
 
-	async function updateText() {
-		if (!draftText.trim()) {
-			return;
-		}
-
-		isSubmitting = true;
-		errorMessage = '';
-
-		try {
-			const query = new URLSearchParams({ text: draftText });
-			const response = await fetch(`/api?${query.toString()}`);
-
-			if (!response.ok) {
-				throw new Error('텍스트 전송에 실패했습니다.');
-			}
-
-			draftText = '';
-		} catch (error) {
-			errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
-		} finally {
-			isSubmitting = false;
-		}
-	}
+	$: recentMessages = [...messages].slice(-4, -1).reverse();
 </script>
 
-<main class="container">
-	<section class="panel">
-		<h1>실시간 메시지</h1>
-		<p class="label">서버에서 받은 텍스트</p>
-		<p class="value">{currentText || '아직 수신된 메시지가 없습니다.'}</p>
+<main class="layout">
+	<section class="poster-frame">
+		<span class="poster-label">메인 포스터</span>
+		<p class="poster-text">{currentText || '메시지를 기다리는 중입니다.'}</p>
 		<p class="status">
 			연결 상태:
 			{connectionStatus === 'open'
@@ -74,36 +50,46 @@
 		{/if}
 	</section>
 
-	<section class="panel">
-		<h2>새 텍스트 전송 (GET: /api?text=...)</h2>
-		<form class="form" on:submit|preventDefault={updateText}>
-			<input type="text" placeholder="전송할 텍스트를 입력하세요" bind:value={draftText} />
-			<button type="submit" disabled={isSubmitting}>
-				{isSubmitting ? '전송 중...' : '전송'}
-			</button>
-		</form>
-	</section>
-
-	<section class="panel history">
-		<h2>히스토리</h2>
-		{#if messages.length === 0}
-			<p class="history-empty">아직 기록이 없습니다.</p>
-		{:else}
-			<ol class="history-list">
-				{#each [...messages].reverse() as message, index}
-					<li class="history-item">
-						<span class="badge">{messages.length - index}</span>
-						<span>{message}</span>
-					</li>
-				{/each}
-			</ol>
-		{/if}
+	<section class="info-grid">
+		<div class="show-details">
+			<p class="title">{currentText || '공연 제목이 준비 중입니다.'}</p>
+			<div style="display: flex; with: 100%; justify-content: space-between;">
+				<p class="organization">조직</p>
+				<p class="time">2025.11.26 12:00</p>
+			</div>
+			<p class="description">
+				{currentText
+					? `${currentText} 공연의 자세한 설명이 여기에 표시됩니다.`
+					: '공연 설명은 아직 입력되지 않았습니다.'}
+			</p>
+		</div>
+		<hr style="width: 100%;" />
+		<div class="history-row">
+			{#each recentMessages as message}
+				<div class="history-card">
+					<p>{message}</p>
+				</div>
+			{/each}
+		</div>
+		<hr style="width: 100%;" />
+		<div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+			<div style="display: flex; flex-direction: column; gap: 0.25rem;">
+				<p style="margin: 0">이메일(scspace@kaist.ac.kr)로 문의 바랍니다.</p>
+				<p style="margin: 0">Please contact us via scspace@kaist.ac.kr.</p>
+			</div>
+			<div style="display: flex; align-items: center; gap: 1rem;">
+				<div style="display: flex; flex-direction: column; gap: 0.25rem; align-items: end;">
+					<p style="margin: 0">학생문화공간위원회</p>
+					<p style="margin: 0">Student Culture & Space Committee</p>
+				</div>
+				<img src="src/static/logo.svg" alt="메인 포스터" height="60" />
+			</div>
+		</div>
 	</section>
 </main>
 
 <style>
 	:global(body) {
-		margin: 0;
 		font-family:
 			'Inter',
 			system-ui,
@@ -111,137 +97,104 @@
 			BlinkMacSystemFont,
 			'Segoe UI',
 			sans-serif;
-		background: #10131a;
-		color: #f2f3f5;
+		background: #ffffff;
+		color: #000000;
+		margin: 0;
+		padding: 0;
 	}
 
-	.container {
-		min-height: 100vh;
+	.layout {
+		height: 100dvh;
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 2rem;
+		padding: 2rem 3rem;
+		box-sizing: border-box;
+	}
+
+	.poster-frame {
+		height: 100%;
+		aspect-ratio: 210 / 297;
+		border-radius: 0.5rem;
+		border: 1px solid rgba(0, 0, 0, 0.25);
+		overflow: hidden;
 		display: flex;
 		flex-direction: column;
-		gap: 1.5rem;
-		padding: 2rem;
-		max-width: 720px;
-		margin: 0 auto;
+		justify-content: center;
+		align-items: center;
 	}
 
-	.panel {
-		background: rgba(255, 255, 255, 0.04);
-		.history-list {
-			list-style: none;
-			margin: 0;
-			padding: 0;
-			display: flex;
-			flex-direction: column;
-			gap: 0.5rem;
-		}
-
-		.history-item {
-			display: flex;
-			gap: 0.75rem;
-			align-items: flex-start;
-			padding: 0.5rem 0.75rem;
-			border-radius: 0.75rem;
-			background: rgba(255, 255, 255, 0.02);
-		}
-
-		.badge {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			min-width: 1.5rem;
-			height: 1.5rem;
-			border-radius: 999px;
-			font-size: 0.8rem;
-			background: rgba(75, 139, 255, 0.2);
-			color: #9dbdff;
-		}
-
-		.history-empty {
-			margin: 0;
-			color: #8f9ba8;
-		}
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 1rem;
-		padding: 1.5rem;
-		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-	}
-
-	h1,
-	h2 {
-		margin: 0 0 0.5rem;
-		font-weight: 600;
-	}
-
-	.label {
-		margin: 0;
-		color: #8f9ba8;
-		font-size: 0.9rem;
-	}
-
-	.value {
-		font-size: 1.5rem;
-		margin: 0.5rem 0 1rem;
-		word-break: break-word;
-	}
-
-	.status {
-		margin: 0;
-		color: #8f9ba8;
-		font-size: 0.9rem;
-	}
-
-	.error {
-		margin-top: 0.5rem;
-		color: #ff6b6b;
-		font-size: 0.9rem;
-	}
-
-	.form {
-		display: flex;
-		gap: 0.75rem;
-	}
-
-	input {
-		flex: 1;
-		padding: 0.75rem 1rem;
-		border-radius: 0.75rem;
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		background: rgba(0, 0, 0, 0.2);
-		color: inherit;
+	.poster-label {
 		font-size: 1rem;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
 	}
 
-	input:focus {
-		outline: none;
-		border-color: #4b8bff;
-		box-shadow: 0 0 0 2px rgba(75, 139, 255, 0.2);
-	}
-
-	button {
-		padding: 0 1.5rem;
-		border-radius: 0.75rem;
-		border: none;
-		background: linear-gradient(120deg, #4b8bff, #8559ff);
-		color: #fff;
+	.poster-text {
+		font-size: clamp(1.5rem, 3vw, 2.75rem);
 		font-weight: 600;
-		cursor: pointer;
-		transition: opacity 150ms ease;
+		margin: 0;
+		line-height: 1.4;
 	}
 
-	button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
+	.info-grid {
+		display: grid;
+		grid-template-rows: 3fr auto 1fr auto auto;
+		gap: 0.5rem;
+		height: 100%;
+		width: 100%;
 	}
 
-	@media (max-width: 640px) {
-		.form {
-			flex-direction: column;
-		}
+	.show-details {
+		padding: 2rem;
+		display: flex;
+		flex-direction: column;
+	}
 
-		button {
-			width: 100%;
-			padding: 0.75rem;
-		}
+	.show-details .title {
+		font-size: 3rem;
+		width: 100%;
+		text-align: center;
+		font-weight: 800;
+	}
+
+	.show-details .organization {
+		font-size: 2rem;
+		font-weight: 600;
+	}
+
+	.show-details .time {
+		font-size: 2rem;
+		font-weight: 600;
+	}
+
+	.show-details .description {
+		font-size: 1.25rem;
+		line-height: 1.6;
+		flex-grow: 1;
+	}
+
+	.history-row {
+		width: 100%;
+		display: flex;
+		gap: 0.5rem;
+		justify-content: space-around;
+	}
+
+	.history-card {
+		height: 100%;
+		aspect-ratio: 210 / 297;
+		border-radius: 0.3rem;
+		border: 1px solid rgba(0, 0, 0, 0.25);
+		background: rgba(255, 255, 255, 0.03);
+		flex-direction: column;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.history-card p {
+		margin: 0;
+		font-size: 0.95rem;
 	}
 </style>
