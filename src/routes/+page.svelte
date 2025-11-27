@@ -3,13 +3,14 @@
 	import { HISTORY_LIMIT } from '../static/const';
 
 	let currentText = '';
-	let messages: string[] = [];
+	let messages: string[] = ['1', '2', '3', '4'];
 	let recentMessages: string[] = [];
 	let connectionStatus: 'connecting' | 'open' | 'error' = 'connecting';
 	let errorMessage = '';
+	let lastUpdated = new Date().toLocaleString();
 
 	onMount(() => {
-		const eventSource = new EventSource('/api');
+		const eventSource = new EventSource('/api/refresh');
 
 		eventSource.onopen = () => {
 			connectionStatus = 'open';
@@ -17,9 +18,21 @@
 		};
 
 		eventSource.onmessage = (event) => {
-			const next = event.data;
-			messages = [...messages.slice(-(HISTORY_LIMIT - 1)), next];
-			currentText = next;
+			try {
+				const payload = JSON.parse(event.data);
+				if (payload.type === 'text') {
+					const next = payload.text ?? '';
+					// messages = [...messages.slice(-(HISTORY_LIMIT - 1)), next];
+					currentText = next;
+				}
+				if (payload.type === 'refresh') {
+					// No text change; this event just bumps the live timestamp.
+				}
+				lastUpdated = new Date().toLocaleString();
+			} catch (error) {
+				console.error('Failed to parse SSE payload', error);
+				errorMessage = '갱신 데이터를 읽을 수 없습니다.';
+			}
 		};
 
 		eventSource.onerror = () => {
@@ -88,7 +101,7 @@
 	</section>
 
 	<div class="updated-timestamp">
-		Last Updated: {new Date().toLocaleString()}
+		Last Updated: {lastUpdated}
 	</div>
 </main>
 

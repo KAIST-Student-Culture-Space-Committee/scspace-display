@@ -1,5 +1,11 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { getHistory, getLatestText, setLatestText, subscribe } from '$lib/server/textBus';
+import {
+    broadcastRefresh,
+    getHistory,
+    getLatestTextEvent,
+    subscribe,
+    type BusEvent
+} from '$lib/server/textBus';
 
 const encoder = new TextEncoder();
 const sseHeaders = {
@@ -12,21 +18,16 @@ const sseHeaders = {
 const formatMessage = (payload: string) => encoder.encode(`data: ${payload}\n\n`);
 const heartbeatChunk = encoder.encode(': keep-alive\n\n');
 
-export const GET: RequestHandler = ({ url }) => {
-    const newText = url.searchParams.get('text');
-    if (newText !== null) {
-        setLatestText(newText);
-        return json({ text: newText });
-    }
-
+export const GET: RequestHandler = () => {
     let cleanup: (() => void) | null = null;
 
     const stream = new ReadableStream<Uint8Array>({
         start(controller) {
-            const send = (value: string) => controller.enqueue(formatMessage(value));
+            const send = (payload: BusEvent) =>
+                controller.enqueue(formatMessage(JSON.stringify(payload))); // SSE expects strings
             const history = getHistory();
             if (history.length === 0) {
-                send(getLatestText());
+                send(getLatestTextEvent());
             } else {
                 history.forEach((value) => send(value));
             }
@@ -45,4 +46,10 @@ export const GET: RequestHandler = ({ url }) => {
     });
 
     return new Response(stream, { headers: sseHeaders });
+};
+
+export const POST: RequestHandler = async () => {
+    // TODO: fetch the latest message from the DB once it is available, then call setLatestText.
+    broadcastRefresh();
+    return json({ response: 'ok' });
 };
